@@ -8,6 +8,7 @@ https://en.wikipedia.org/wiki/List_of_Singapore_MRT_stations
 from selenium.webdriver.common.by import By
 import pandas as pd
 import logging
+import re
 from .base_scraper import BaseScraper
 
 logger = logging.getLogger(__name__)
@@ -39,6 +40,12 @@ class MRTScraper(BaseScraper):
         finally:
             self.close_driver()
 
+    def to_dataframe(self):
+        """Convert scraped stations to DataFrame"""
+        df = pd.DataFrame(self.stations)
+        logger.info(f"Converted {len(df)} stations to DataFrame")
+        return df
+
     def _extract_stations_from_tables(self):
         """Extract station data from Wikipedia tables"""
         try:
@@ -65,21 +72,28 @@ class MRTScraper(BaseScraper):
         try:
             rows = table.find_elements(By.CSS_SELECTOR, "tbody tr")
 
-            # Skip header row
-            data_rows = rows[1:] if len(rows) > 1 else rows
+            # Skip header rows (first 2 rows are headers)
+            data_rows = rows[2:] if len(rows) > 2 else rows
 
             for row in data_rows:
                 try:
-                    cells = row.find_elements(By.CSS_SELECTOR, "td")
+                    # Get ALL cells including th (row headers) and td
+                    all_cells = row.find_elements(By.CSS_SELECTOR, "th, td")
 
-                    if len(cells) < 3:
+                    if len(all_cells) < 4:
                         continue
+
+                    cells = all_cells
 
                     station_data = self._parse_row(cells)
 
-                    if station_data['name']:  # Only add if name exists
+                    # Only add if name and code exist
+                    if station_data["name"] and station_data["code"]:
                         self.stations.append(station_data)
-                        logger.debug(f"Extracted: {station_data['name']} ({station_data['line']})")
+                        logger.debug(
+                            f"Extracted: {station_data['name']} "
+                            f"({station_data['code']}) - {station_data['line']}"
+                        )
 
                 except Exception as e:
                     logger.debug(f"Error parsing row: {e}")
@@ -90,62 +104,58 @@ class MRTScraper(BaseScraper):
 
     def _parse_row(self, cells):
         """
-        Parse a table row to extract station information
+        Parse a table row to extract station information.
+
+        Wikipedia table structure (known positions):
+        [0] English name (th)
+        [1] Chinese name (td)
+        [2] Tamil name (td)
+        [3] Station code (td) - format: "NS10"
+        [4] Line (td) - format: "North–South Line"
+        [5] Opened date (td) - format: "10 February 1996"
+        [6+] Connections and references
 
         Args:
-            cells: List of table cells (td elements)
+            cells: List of all cells (th + td elements)
 
         Returns:
             dict: Dictionary with station data
         """
         station_data = {
-            'name': '',
-            'code': '',
-            'line': '',
-            'opening_year': '',
-            'latitude': '',
-            'longitude': ''
+            "name": "",
+            "code": "",
+            "line": "",
+            "opening_year": "",
+            "latitude": "",
+            "longitude": "",
         }
 
         try:
-            # Column order may vary, try to identify columns by content
+            if len(cells) < 6:
+                return station_data
 
-            # First cell usually contains station name (or code + name)
-            name_text = cells[0].text.strip()
+            cell_texts = [cell.text.strip() for cell in cells]
 
-            # Try to extract station code if present (usually in format like "NS1")
-            code = ''
-            if len(name_text.split()) > 0:
-                # Check if first part looks like a code (e.g., "NS1", "EW1")
-                potential_code = name_text.split()[0]
-                if len(potential_code) <= 4 and any(c.isdigit() for c in potential_code):
-                    code = potential_code
-                    station_data['code'] = code
+            # Position 0: English station name (in <th>)
+            station_data["name"] = cell_texts[0]
 
-            station_data['name'] = name_text
+            # Position 3: Station code (e.g., "NS10", "EW1")
+            code_text = cell_texts[3]
+            code = self._extract_code_from_text(code_text)
+            if code:
+                station_data["code"] = code
 
-            # Second cell usually contains line information
-            if len(cells) > 1:
-                line_text = cells[1].text.strip()
-                # Extract line code (e.g., "North-South Line" -> "NS")
-                line_code = self._extract_line_code(line_text)
-                station_data['line'] = line_code or line_text
+            # Position 4: Line information (e.g., "North–South Line")
+            line_text = cell_texts[4]
+            line = self._extract_line_code(line_text)
+            if line:
+                station_data["line"] = line
 
-            # Look for year information in remaining cells
-            if len(cells) > 2:
-                year_text = cells[2].text.strip()
-                year = self._extract_year(year_text)
-                if year:
-                    station_data['opening_year'] = year
-
-            # Try to extract coordinates from later cells
-            for i in range(3, len(cells)):
-                cell_text = cells[i].text.strip()
-                coords = self._extract_coordinates(cell_text)
-                if coords['latitude'] and coords['longitude']:
-                    station_data['latitude'] = coords['latitude']
-                    station_data['longitude'] = coords['longitude']
-                    break
+            # Position 5: Opening date (e.g., "10 February 1996")
+            date_text = cell_texts[5]
+            year = self._extract_year(date_text)
+            if year:
+                station_data["opening_year"] = year
 
         except Exception as e:
             logger.debug(f"Error parsing row content: {e}")
@@ -153,45 +163,41 @@ class MRTScraper(BaseScraper):
         return station_data
 
     @staticmethod
+    def _extract_code_from_text(text):
+        """Extract station code from text (handles HTML markup)"""
+        # Remove extra whitespace and search for pattern like NS10, EW1, etc.
+        text = text.replace("\n", " ").strip()
+        match = re.search(r"([A-Z]{2,3}\d+)", text)
+        return match.group(1) if match else ""
+
+    @staticmethod
     def _extract_line_code(line_text):
         """Extract line code from line name"""
         line_mapping = {
-            'North-South': 'NS',
-            'East-West': 'EW',
-            'North-East': 'NE',
-            'Circle': 'CC',
-            'Downtown': 'DT',
-            'Thomson': 'TE',
+            "North-South": "NS",
+            "North–South": "NS",  # en-dash version
+            "East-West": "EW",
+            "East–West": "EW",
+            "North-East": "NE",
+            "North–East": "NE",
+            "Circle": "CC",
+            "Downtown": "DT",
+            "Thomson": "TE",
+            "Jurong Region": "JR",
         }
 
         for line_name, code in line_mapping.items():
             if line_name.lower() in line_text.lower():
                 return code
 
-        return None
+        return ""
+
 
     @staticmethod
     def _extract_year(text):
         """Extract opening year from text"""
-        import re
-        match = re.search(r'\b(19|20)\d{2}\b', text)
-        return match.group(0) if match else ''
-
-    @staticmethod
-    def _extract_coordinates(text):
-        """Extract latitude and longitude from text"""
-        import re
-        coords = {'latitude': '', 'longitude': ''}
-
-        # Pattern for coordinates like "1.3521°N 103.8198°E"
-        pattern = r'(\d+\.\d+)°[NS]\s+(\d+\.\d+)°[EW]'
-        match = re.search(pattern, text)
-
-        if match:
-            coords['latitude'] = match.group(1)
-            coords['longitude'] = match.group(2)
-
-        return coords
+        match = re.search(r"\b(19|20)\d{2}\b", text)
+        return match.group(0) if match else ""
 
 
 # Usage example

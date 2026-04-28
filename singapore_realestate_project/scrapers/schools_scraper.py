@@ -242,6 +242,12 @@ class SchoolsScraper(BaseScraper):
 
         return school_data
 
+    def to_dataframe(self):
+        """Convert scraped schools to DataFrame"""
+        df = pd.DataFrame(self.schools)
+        logger.info(f"Converted {len(df)} schools to DataFrame")
+        return df
+
 
 # Usage example
 if __name__ == "__main__":

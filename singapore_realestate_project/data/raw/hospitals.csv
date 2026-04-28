@@ -1,0 +1,28 @@
+name,type,opened,district,ownership,beds,staff
+KK Women's and Children's Hospital,Acute,1858,Rochor,,848,4861
+Sengkang General Hospital,Acute,2018,Sengkang,848,799,3797
+Singapore General Hospital,Acute,1821,Outram,799,1939,9201
+Khoo Teck Puat Hospital,Acute,2010,Yishun,Public (National Healthcare Group),795,
+Tan Tock Seng Hospital,Acute,1844,Novena,Public (National Healthcare Group),1700,
+Woodlands Hospital,Acute,2023,Woodlands,Public (National Healthcare Group),1800,
+Alexandra Hospital,Acute,1938,Queenstown,Public (National University Health System),326,
+National University Hospital,Acute,1985,Kent Ridge,Public (National University Health System),1200,8271
+Ng Teng Fong General Hospital,Acute,2015,Jurong East,Public (National University Health System),700,
+Mount Alvernia Hospital,Acute,1961,Marymount,Public (National University Health System),,319
+Crawfurd Hospital,Acute,2012,Bukit Timah,Not-for-Profit,,31
+Farrer Park Hospital,Acute,2016,Farrer Park,Private,,121
+Gleneagles Hospital,Acute,1957,Tanglin,Private (Parkway Pantai),257,
+Mount Elizabeth Hospital,Acute,1979,Orchard,Private (Parkway Pantai),345,
+Mount Elizabeth Novena Hospital,Acute,2012,Novena,Private (Parkway Pantai),333,
+Parkway East Hospital,Acute,1942,Joo Chiat,Private (Parkway Pantai),143,
+Raffles Hospital,Acute,2002,Bugis,Private (Parkway Pantai),,380
+Thomson Medical Centre,Acute,1979,Thomson,Private (Raffles Medical Group),,187
+Sengkang Community Hospital,Community,2018,Sengkang,,400,407
+Woodlands Hospital,Community,2023,Woodlands,Public (National Healthcare Group),,
+Yishun Community Hospital,Community,2015,Yishun,Public (National Healthcare Group),224,
+Jurong Community Hospital,Community,2015,Jurong East,Public (National Healthcare Group),,400
+Ang Mo Kio - Thye Hua Kwan Hospital,Community,1993,Ang Mo Kio,Public (National University Health System),,360
+Ren Ci Community Hospital,Community,1994,Novena,Not-for-Profit,,
+St. Andrew's Community Hospital,Community,1992,Simei,Not-for-Profit,,277
+St Luke's Hospital,Community,1996,Bukit Batok,Not-for-Profit,,
+Institute of Mental Health,Psychiatric,1841,Hougang,,,2010

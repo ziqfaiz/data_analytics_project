@@ -1,142 +1,105 @@
-# Quick Start Guide
+# Quick Start Checklist
 
-## Project Setup (5 minutes)
+## Pre-Flight Checks
 
-### 1. Install Dependencies
+Before running the scrapers, verify your setup:
+
+- [ ] Python 3.8 or higher installed
+- [ ] `pip` package manager available
+- [ ] Internet connection active
+- [ ] `requirements.txt` in project directory
+- [ ] `scrapers/` directory exists
+- [ ] `main.py` file present
+
+## Installation (5 minutes)
+
 ```bash
+# 1. Install dependencies
 pip install -r requirements.txt
+
+# 2. Verify installation (should show no errors)
+python test_scrapers.py
+
+# 3. Check output
+# You should see: ✓ ALL TESTS PASSED!
 ```
 
-### 2. Configure API Keys
-Copy `.env.example` to `.env` and add your Google Maps API key:
+## Run All Scrapers (3-5 minutes)
+
 ```bash
-cp .env.example .env
-# Edit .env with your API key
+# 1. Execute main script
+python main.py
+
+# 2. Wait for completion
+# You should see progress messages for each scraper
+
+# 3. Check results
+ls -la data/raw/
+# Should show: mrt_stations.csv, hospitals.csv, schools.csv, ura_realestate.csv
 ```
 
-### 3. Create Data Directories
+## Run Individual Scrapers
+
 ```bash
-mkdir -p data/raw data/processed output/visualizations output/reports output/maps
+# MRT Stations (30-45 seconds)
+python scrapers/mrt_scraper.py
+
+# Hospitals (20-30 seconds)
+python scrapers/hospitals_scraper.py
+
+# Schools (90-120 seconds)
+python scrapers/schools_scraper.py
+
+# URA Real Estate (45-60 seconds)
+python scrapers/ura_realestate_scraper.py
 ```
 
-## Workflow Overview
+## Verify Output
 
-### Phase 1: Data Collection (Week 1)
-- **Notebook**: `notebooks/01_data_collection.ipynb`
-- **Script**: `scripts/data_collection.py`
-- **Tasks**:
-  - Download HDB resale data from data.gov.sg
-  - Get school/hospital/MRT locations
-  - Optional: Scrape property portals with Selenium
-- **Output**: CSV files in `data/raw/`
-
-### Phase 2: Data Preprocessing (Week 2)
-- **Script**: `scripts/data_preprocessing.py`
-- **Tasks**:
-  - Handle missing values
-  - Remove outliers
-  - Encode categorical variables
-  - Standardize column names
-- **Output**: Cleaned CSV in `data/processed/`
-
-### Phase 3: Feature Engineering (Week 2)
-- **Script**: `scripts/feature_engineering.py`
-- **Tasks**:
-  - Calculate distances to schools/hospitals/MRT
-  - Count amenities within radius
-  - Create categorical features
-  - Create aggregate features
-- **Output**: Engineered data with new features
-
-### Phase 4: Exploratory Data Analysis (Week 3)
-- **Notebook**: `notebooks/03_eda.ipynb`
-- **Script**: `scripts/eda.py`
-- **Tasks**:
-  - Univariate analysis (distributions)
-  - Bivariate analysis (relationships)
-  - Create visualizations
-  - Identify patterns
-- **Output**: Charts and insights
-
-### Phase 5: Insights & Visualization (Week 3-4)
-- **Notebook**: `notebooks/04_insights_visualization.ipynb`
-- **Script**: `scripts/visualization.py`
-- **Tasks**:
-  - Create interactive maps (Folium)
-  - Analyze price vs distance relationships
-  - Generate insights and recommendations
-  - Create final report
-- **Output**: Maps, visualizations, insights
-
-## Key Files
-
-| File | Purpose |
-|------|---------|
-| `scripts/config.py` | Configuration, paths, API keys |
-| `scripts/data_collection.py` | Download and scrape data |
-| `scripts/data_preprocessing.py` | Clean and transform data |
-| `scripts/feature_engineering.py` | Create derived features |
-| `scripts/eda.py` | Exploratory analysis functions |
-| `scripts/visualization.py` | Maps and interactive plots |
-
-## Running Analysis
-
-### Option 1: Using Jupyter Notebooks (Recommended)
 ```bash
-jupyter notebook notebooks/
+# Check file sizes
+du -h data/raw/*.csv
+
+# View first few rows
+head -5 data/raw/mrt_stations.csv
+head -5 data/raw/hospitals.csv
+head -5 data/raw/schools.csv
+head -5 data/raw/ura_realestate.csv
+
+# Count records
+wc -l data/raw/*.csv
 ```
-
-### Option 2: Using Python Scripts
-```bash
-python scripts/data_collection.py
-python scripts/data_preprocessing.py
-python scripts/feature_engineering.py
-python scripts/eda.py
-python scripts/visualization.py
-```
-
-## Important Notes
-
-1. **Data Sources**:
-   - Primary: data.gov.sg (HDB, schools, hospitals)
-   - Secondary: Kaggle for pre-compiled datasets
-   - Google Maps API for coordinates
-
-2. **API Key**:
-   - Get free Google Maps API key from Google Cloud Console
-   - Add to `.env` file before running
-
-3. **Data Storage**:
-   - `data/raw/` - Original data (never modify)
-   - `data/processed/` - Cleaned data
-   - `output/` - All outputs (maps, visualizations, reports)
-
-4. **Output**:
-   - Maps: `output/maps/` (HTML files)
-   - Charts: `output/visualizations/` (PNG and HTML)
-   - Reports: `output/reports/` (Text and markdown)
 
 ## Troubleshooting
 
-**Missing data files?**
-- Check `data/raw/` directory
-- Download from data.gov.sg or Kaggle
-- See data_collection.ipynb for links
+### Problem: "ModuleNotFoundError: No module named 'selenium'"
+**Solution:** Run `pip install -r requirements.txt`
 
-**API key errors?**
-- Verify `.env` file exists with correct key
-- Check Google Cloud Console for API quota
+### Problem: "Unable to obtain driver for chrome"
+**Solution:** Install ChromeDriver: `pip install chromedriver-binary`
 
-**Import errors?**
-- Run `pip install -r requirements.txt`
-- Verify virtual environment is activated
+### Problem: Empty CSV files
+**Solution:** 
+1. Check internet connection
+2. Run with debug logging
+3. Verify websites are accessible in browser
+
+### Problem: Timeout errors
+**Solution:** Increase wait time when initializing scraper with `implicit_wait=20`
 
 ## Next Steps
 
-1. Read `README.md` for detailed project overview
-2. Start with `notebooks/01_data_collection.ipynb`
-3. Follow the workflow phases in order
-4. Document your findings as you go
-5. Focus on generating insights in Phase 5
+1. ✓ **Run All Scrapers** → `python main.py`
+2. ✓ **Inspect Output** → Check `data/raw/` directory
+3. ✓ **Load Data** → Use pandas
+4. ✓ **Analyze Data** → Perform exploratory data analysis
+5. ✓ **Build Models** → Create predictions or visualizations
 
-Good luck with your analysis! 📊
+## Documentation
+
+- **Setup Guide:** `SCRAPER_SETUP_GUIDE.md`
+- **Project Status:** `PROJECT_STATUS.md`
+
+---
+
+**Ready to start?** Run: `python main.py`
