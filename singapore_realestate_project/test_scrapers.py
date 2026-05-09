@@ -119,11 +119,13 @@ def print_summary():
             'fields': ['name', 'type', 'address', 'contact', 'principal', 'url'],
             'output': 'data/raw/schools.csv'
         },
-        'URA Real Estate Scraper': {
-            'url': 'https://www.ura.gov.sg/Corporate/Property/Property-Data',
-            'source': 'URA',
-            'fields': ['property_type', 'location', 'price', 'rental', 'supply', 'vacancy', 'stock', 'pipeline_supply', 'year'],
-            'output': 'data/raw/ura_realestate.csv'
+        'URA PMI Transaction Scraper': {
+            'url': 'https://eservice.ura.gov.sg/property-market-information/pmiResidentialTransactionSearch',
+            'source': 'URA Property Market Information',
+            'fields': ['project_name', 'street_name', 'property_type', 'postal_district',
+                       'floor_range', 'unit_size_sqm', 'unit_price_psf', 'transacted_price',
+                       'sale_date', 'type_of_sale'],
+            'output': 'data/raw/ura_pmi_transactions.csv'
         }
     }
 

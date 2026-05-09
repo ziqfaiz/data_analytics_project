@@ -177,32 +177,58 @@ class ScraperManager:
             logger.error(f"Hospitals scraping failed: {e}")
             return None
 
-    def scrape_ura_realestate(self, url, property_types=None, save=True):
+    def scrape_ura_realestate(self, url=None, property_type=None, property_types=None,
+                              from_period=None, to_period=None,
+                              max_pages=None, save=True):
         """
-        Scrape Singapore real estate data from URA
+        Scrape Singapore residential transaction data from URA PMI.
 
         Args:
-            url: URA property data URL
-            property_types: List of property types ('residential', 'commercial')
-            save: Save results to CSV
+            url: Override URL (defaults to PMI transaction search page).
+            property_type: Single property type string, e.g. 'Condominium'.
+            property_types: List of types to scrape in one call (uses scrape_all).
+            from_period: Start quarter e.g. '2022Q1'.
+            to_period: End quarter e.g. '2024Q4'.
+            max_pages: Cap on result pages per search.
+            save: Save results to CSV.
 
         Returns:
-            DataFrame with property data
+            DataFrame with transaction data.
         """
-        logger.info("Starting URA real estate scrape...")
+        from .ura_realestate_scraper import PMI_URL
+        target_url = url or PMI_URL
+        logger.info("Starting URA PMI transaction scrape...")
         scraper = URARealestateScraper(headless=True)
 
         try:
-            df = scraper.scrape(url, property_types=property_types)
+            if property_types and len(property_types) > 1:
+                # Scrape multiple types in one go
+                df = scraper.scrape_all(
+                    property_types=property_types,
+                    from_period=from_period,
+                    to_period=to_period,
+                    max_pages=max_pages,
+                    output_dir=str(self.output_dir),
+                )
+            else:
+                ptype = property_type or (property_types[0] if property_types else None)
+                df = scraper.scrape(
+                    url=target_url,
+                    property_type=ptype,
+                    from_period=from_period,
+                    to_period=to_period,
+                    max_pages=max_pages,
+                )
+
             if df is not None and not df.empty:
                 self.results['ura_realestate'] = df
                 if save:
-                    filepath = self.output_dir / "ura_realestate.csv"
+                    filepath = self.output_dir / "ura_pmi_transactions.csv"
                     df.to_csv(filepath, index=False)
-                    logger.info(f"Saved {len(df)} property records to {filepath}")
+                    logger.info(f"Saved {len(df)} transaction records to {filepath}")
                 return df
             else:
-                logger.warning("No data scraped from URA")
+                logger.warning("No data scraped from URA PMI")
                 return None
         except Exception as e:
             logger.error(f"URA scraping failed: {e}")

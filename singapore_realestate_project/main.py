@@ -53,65 +53,107 @@ def scrape_hospital_data():
         print(f"✓ Data saved to {output_file}")
 
 def scrape_schools_data():
-    """Scrape Singapore schools data from MOE SchoolFinder"""
+    """Scrape Singapore schools data from MOE SchoolFinder
+
+    Scrapes all supported school types: preschool, primary, secondary, jc.
+    All types share the same RSC Wire Protocol structure on the MOE site.
+    """
     output_dir = Path("data/raw")
     output_dir.mkdir(parents=True, exist_ok=True)
 
     output_file = output_dir / "schools.csv"
 
-    if output_file.exists():
+    if output_file.exists() and output_file.stat().st_size > 100:
         print(f"✓ Schools data already exists at {output_file}")
         return
     else:
-        print("Starting schools data scrape...")
+        print("Starting schools data scrape (preschool)...")
         scraper = SchoolsScraper(headless=True)
         url = "https://www.moe.gov.sg/schoolfinder"
 
-        # Scrape all school types
-        df = scraper.scrape(url, school_types=['preschool', 'primary', 'secondary', 'jc', 'college'])
+        df = scraper.scrape(url, school_types=["preschool", "primary", "secondary", "jc"])
         print(f"\n✓ Scraped {len(df)} schools")
         print("\nFirst few schools:")
         print(df.head(10))
+        print("\nColumns:", list(df.columns))
 
         # Save to CSV
         scraper.save_to_csv(str(output_file))
         print(f"✓ Data saved to {output_file}")
 
-def scrape_ura_realestate_data():
-    """Scrape Singapore real estate data from URA"""
+def scrape_ura_realestate_data(
+    districts=None,
+    property_type_ids=None,
+    force=False,
+):
+    """
+    Scrape residential transaction data from URA Property Market Information.
+
+    Strategy: loop through 28 postal districts × 4 property types,
+    POST directly to the URA PMI CSV download endpoint, parse the CSV response,
+    and accumulate all transaction records.
+
+    Args:
+        districts         : List of 0-based indices into POSTAL_DISTRICTS
+                            (None = all 28). Use [0, 1] for a quick test
+                            (D01 + D02).
+        property_type_ids : List of type strings "1"–"4" (None = all 4).
+                            1 = Landed Properties (Non-Strata)
+                            2 = Strata Landed
+                            3 = Apartments & Condominiums
+                            4 = Executive Condominiums
+        force             : Re-scrape even if output file already exists.
+    """
     output_dir = Path("data/raw")
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    output_file = output_dir / "ura_realestate.csv"
+    output_file = output_dir / "ura_pmi_transactions.csv"
 
-    if output_file.exists():
-        print(f"✓ URA real estate data already exists at {output_file}")
+    if output_file.exists() and not force:
+        print(f"✓ URA PMI transaction data already exists at {output_file}")
+        print("  Pass force=True (or delete the file) to re-scrape.")
         return
+
+    print("Starting URA PMI residential transaction scrape...")
+    print("  Looping: 28 postal districts × 4 property types")
+    print("  Sale date: Apr 2021 – Apr 2026 (default)")
+    print("  Sale type: All (New Sale + Sub Sale + Resale)")
+    print()
+
+    scraper = URARealestateScraper(headless=True)
+
+    df = scraper.scrape(
+        districts=districts,
+        property_type_ids=property_type_ids,
+    )
+
+    if df is not None and not df.empty:
+        print(f"\n✓ Scraped {len(df)} transaction records")
+        print(f"\nProperty type breakdown:")
+        print(df["property_type"].value_counts().to_string())
+        print(f"\nPostal districts covered: {sorted(df['postal_district'].unique())}")
+        print(f"\nSale date range: {df['sale_date'].min()} → {df['sale_date'].max()}")
+        print(f"\nFirst few records:")
+        print(df.head(5).to_string())
+
+        df.to_csv(output_file, index=False)
+        print(f"\n✓ Data saved to {output_file}")
     else:
-        print("Starting URA real estate data scrape...")
-        scraper = URARealestateScraper(headless=True)
-        url = "https://www.ura.gov.sg/Corporate/Property/Property-Data"
-
-        df = scraper.scrape(url, property_types=['residential', 'commercial'])
-        print(f"\n✓ Scraped {len(df)} property records")
-        print("\nFirst few records:")
-        print(df.head(10))
-
-        # Save to CSV
-        scraper.save_to_csv(str(output_file))
-        print(f"✓ Data saved to {output_file}")
+        print("✗ No data scraped — check logs for errors")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
 
     scrape_mrt_data()
     print()
     scrape_hospital_data()
-    #print()
+    print()
     scrape_schools_data()
-    #print()
+    print()
     scrape_ura_realestate_data()
 
 
