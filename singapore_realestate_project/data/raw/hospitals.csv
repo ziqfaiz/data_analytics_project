@@ -1,7 +1,8 @@
 name,type,opened,district,ownership,beds,staff
-KK Women's and Children's Hospital,Acute,1858,Rochor,,848,4861
-Sengkang General Hospital,Acute,2018,Sengkang,848,799,3797
-Singapore General Hospital,Acute,1821,Outram,799,1939,9201
+Changi General Hospital,Acute,1998,Simei,Public (SingHealth),1043,5736
+KK Women's and Children's Hospital,Acute,1858,Rochor,Public (SingHealth),848,4861
+Sengkang General Hospital,Acute,2018,Sengkang,Public (SingHealth),799,3797
+Singapore General Hospital,Acute,1821,Outram,Public (SingHealth),1939,9201
 Khoo Teck Puat Hospital,Acute,2010,Yishun,Public (National Healthcare Group),795,
 Tan Tock Seng Hospital,Acute,1844,Novena,Public (National Healthcare Group),1700,
 Woodlands Hospital,Acute,2023,Woodlands,Public (National Healthcare Group),1800,

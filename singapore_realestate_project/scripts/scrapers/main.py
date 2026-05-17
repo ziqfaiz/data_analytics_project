@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from scrapers import MRTScraper, HospitalsScraper, SchoolsScraper, URARealestateScraper
+from scripts.scrapers import MRTScraper, HospitalsScraper, SchoolsScraper, URARealestateScraper
 
 def scrape_mrt_data():
     """Scrape Singapore MRT station data from Wikipedia"""
